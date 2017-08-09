@@ -7,6 +7,7 @@
 import random  #The random libray is used to select random tweets
 import sys #The sys library helps exit the program gracefully
 import datetime #The datetime library helps check user entered dates and format other dates in a uniform way
+from contextlib import redirect_stdout #Making file output easier - hopefully 
 
 trump_tweets = "TrumpTweetsTDL.txt"  #Loads a tab delimited file of Donald Trump tweets
 
@@ -22,7 +23,7 @@ tweet_neu = {}
 tweet_pos = {}
 tweet_neg = {}
 
-#Keep count of how many tweets we're adding and how many are retweets
+#Keep count of how many tweets we're adding and how many are retweets - start at one to make things more sensible for humans
 tweetid = 1
 rt_by_trump = 1
 
@@ -108,15 +109,21 @@ def word_search(inp_word): #The function that handles searching tweets for a wor
     #However the way it's currently written it would have to include passing more variables in and out of the function to deal with the text specifically mentioning the word searched.
     
     if menu.lower() == ('s' or 'stats' or 'stat'):
-        word_stats(tweets_contain)
+        word_stats(tweets_contain, inp_word, 0)
         main_menu()
     
     if menu.lower() == ('i' or 'ids' or 'id'):
 
-        tweets_contain_str = ', '.join(str(x) for x in tweets_contain[:-1])
-        tweets_contain_str = tweets_contain_str + ', and ' + str(tweets_contain[-1]) #Make the string gramatically correct. What happens if there is only one result?? TEST THIS!
-        print('The word %s appears in the following tweets:\n%s' % (inp_word, tweets_contain_str))
-        
+        if len(tweets_contain) > 1:
+
+            tweets_contain_str = ', '.join(str(x) for x in tweets_contain[:-1])
+            tweets_contain_str = tweets_contain_str + ', and ' + str(tweets_contain[-1]) #Make the string gramatically correct. What happens if there is only one result?? TEST THIS!
+            print('The word %s appears in the following tweets:\n%s' % (inp_word, tweets_contain_str))
+
+        elif len(tweets_contain) == 1:
+            tweets_contain_str = ''.join(str(x) for x in tweets_contain)
+            print('The word %s appears in the following tweet:\n%s' % (inp_word, tweets_contain_str))
+                    
         main_menu()
     
     if menu.lower() == ('a' or 'all' or 'al' or 'all tweets'):
@@ -193,7 +200,7 @@ def date_search(inp_date): #This gets called when user wants to search by date
         menu = input('On %s Trump tweeted %d times. Would you like to see a list of the (i)ds, (a)ll the tweet text, or (r)andom tweet (or (m)ain menu)? ' % (inp_date, len(tweets_contain)))
 
     elif len(tweets_contain) == 0:
-        print('\nNo tweets found for %s.  Maybe the format was wrong or perhaps out of the range of this program. Only tweets sent between %s and %s are indexed by this program ' % (inp_date, tweet_date[(tweetid-1)], tweet_date[0]))
+        print('\nNo tweets found for %s.  Maybe the format was wrong or perhaps out of the range of this program. Only tweets sent between %s and %s are indexed by this program ' % (inp_date, tweet_date[(tweetid-1)], tweet_date[1]))
         main_menu()
     
     else:
@@ -201,9 +208,16 @@ def date_search(inp_date): #This gets called when user wants to search by date
         sys.exit('tweets_contain variable was not a number greater than zero - somehow')
     
     if menu.lower() == ('i' or 'ids' or 'id'):
-        tweets_contain_str = ', '.join(str(x) for x in tweets_contain[:-1])
-        tweets_contain_str = tweets_contain_str + ', and ' + str(tweets_contain[-1])
-        print('On %s the following tweets were sent:\n%s' % (inp_date, tweets_contain_str))
+        
+        if len(tweets_contain) > 1:
+        
+            tweets_contain_str = ', '.join(str(x) for x in tweets_contain[:-1])
+            tweets_contain_str = tweets_contain_str + ', and ' + str(tweets_contain[-1])
+            print('On %s the following tweets were sent:\n%s' % (inp_date, tweets_contain_str))
+        
+        elif len(tweets_contain) == 1:
+            tweets_contain_str = ''.join(str(x) for x in tweets_contain)
+            print('On %s the following tweet was sent:\n%s' % (inp_date, tweets_contain_str))
         
         main_menu()
     
@@ -211,6 +225,8 @@ def date_search(inp_date): #This gets called when user wants to search by date
         
         for tweet in tweets_contain:
             basic_tweet_data(tweet)
+            
+        menu_save(tweets_contain, inp_date, 'date')
             
         main_menu()
     
@@ -259,7 +275,7 @@ def menu_date_search(): #Gets called from main_menu_1 and handles date input bef
     clean_inp_date = datetime.date(int(inp_date[0:4]), int(inp_date[5:7]), int(inp_date[8:10])).isoformat() #Have python generate a date to ensure clean input
     date_search(clean_inp_date)
 
-def word_stats(tweets_contain): #Called from the word search function to provide statistics about a single word.
+def word_stats(tweets_contain, inp_word, saving): #Called from the word search function to provide statistics about a single word.
     rt_total = 0
     fav_total = 0
     for tweet in tweets_contain:
@@ -283,6 +299,12 @@ def word_stats(tweets_contain): #Called from the word search function to provide
         
     elif ((fav_total/len(tweets_contain))-(stats[0]/tweetid) < 0):
         print('Tweets containing this word recieved %d fewer favorites than the average Trump tweet' % (((fav_total/len(tweets_contain))-(int(stats[0])/tweetid))/-1))
+    
+    if saving == True:
+        return
+        
+    menu_save(tweets_contain, inp_word, 'word_stats')
+    
     main_menu()
         
 def overall_stats(req_stat): #Used for a main menu function as well as passing these stats to other functions.
@@ -300,6 +322,56 @@ def overall_stats(req_stat): #Used for a main menu function as well as passing t
     print('Out of a total of %d tweets, %d were tweets by other people that were retweeted by Trump and not analyzed for this program.\n' % ((tweetid + rt_by_trump), rt_by_trump))
     print('Out of Trump\'s %d original tweets. The total favorites were %d and the total retweets by others were %d. This averages to %d favorites and %d retweets per tweet.' % (tweetid, fav_total, rt_total, (fav_total/tweetid), (rt_total/tweetid)))
         
+
+def menu_save(tweets_contain, user_data, data_type): #Create a menu that can be called anywhere to offer saving the output to a file if the user finds it interesting.
+    
+    save_inp = str(input('Did you find this interesting? Would you like to save it to a file for later review? y/n '))
+    
+    try:
+        
+        if save_inp.lower() == ('y' or 'yes'):
             
+           save_file(tweets_contain, user_data, data_type)         
+            
+        elif save_inp.lower() == ('n' or 'no'):
+            return
+            
+        else:
+            print('Bad input, try again')
+            menu_save(tweets_contain, user_data, data_type)
+    except ValueError:
+        print('Bad input - returning to main menu\n')
+        main_menu_1()
+        
+def save_file(tweets_contain, user_data, data_type):
+
+    file_name = str(user_data) + '_' + str(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) + '.txt' #Define a file name that makes sense but should be handled by all operating systems smoothly
+    
+    print('Your file has been saved as %s in the same directory this program was executed from.' % file_name)
+    
+    if data_type == 'word_stats':
+        with open(file_name, 'w') as f:
+            with redirect_stdout(f):
+                basic_info()
+                print('\n\n')
+                print('The following is the analysis of the word %s in Donald Trump\'s tweets:\n' % user_data)
+                word_stats(tweets_contain, user_data, 1)
+    
+    elif data_type == 'date':
+        with open(file_name, 'w') as f:
+            with redirect_stdout(f):
+                basic_info()
+                print('\n\n')
+                print('On the date %s, Donald Trump tweeted:\n' % user_data)
+                for tweet in tweets_contain:
+                    basic_tweet_data(tweet)
+        
+
+def basic_info():
+    print('This program was written as a final project for CSC110 class in Summer of 2017.')
+    print('It analyzes tweets made by President Donald Trump from %s until %s. It does not inlcude things retweeted from his account.' % (tweet_date[(tweetid-1)], tweet_date[1]))
+    print('I can\'t imagine anyone would want to use this for anything, but if you do - it\'s licensed under GPLv3')
+
+                                                                        
 main_menu_1() #Run the program
 
