@@ -7,7 +7,11 @@
 import random  #The random libray is used to select random tweets
 import sys #The sys library helps exit the program gracefully
 import datetime #The datetime library helps check user entered dates and format other dates in a uniform way
-from contextlib import redirect_stdout #Making file output easier - hopefully 
+from contextlib import redirect_stdout #Making file output easier - hopefully
+import matplotlib.pyplot as plt; plt.rcdefaults()
+import numpy as np #graphing
+import matplotlib.pyplot as plt #graphing
+from time import sleep
 
 FMT = '%H:%M:%S'  #Set the time format globally
 
@@ -336,7 +340,7 @@ def menu_time_search():
             
     elif (time_menu_inp.lower() == 'o' or time_menu_inp.lower() == 'overall' or time_menu_inp.lower() == 'total'):
         
-        print('Sorry this feature hasn\'t been implemented yet')
+        time_overall()
         main_menu()
         
     else:
@@ -421,8 +425,8 @@ def time_crunch(start_time, end_time):
 
     
     for tweet in tweet_time:
-        
-        if (datetime.datetime.strptime(tweet_time[tweet], FMT) > datetime.datetime.strptime(str(start_time).split(' ')[1], FMT) and datetime.datetime.strptime(tweet_time[tweet], FMT) > datetime.datetime.strptime(str(end_time).split(' ')[1], FMT)):
+        #This formatting is a mess - figure out why start and end time variables had to be cast back and forth in and out of strings and datetime. Fix in the future.
+        if (datetime.datetime.strptime(tweet_time[tweet], FMT) > datetime.datetime.strptime(str(start_time).split(' ')[1], FMT) and datetime.datetime.strptime(tweet_time[tweet], FMT) < datetime.datetime.strptime(str(end_time).split(' ')[1], FMT)):
 #            print(tweet)
             tweets_contain.append(tweet)
     
@@ -504,7 +508,49 @@ def save_file(tweets_contain, user_data, data_type):
                 print('On the date %s, Donald Trump tweeted:\n' % user_data)
                 for tweet in sorted(tweets_contain, reverse=True):
                     basic_tweet_data(tweet)
+
+def time_overall():
+    time_buckets = {'12AM - 3AM':('0:00:00', '3:00:00'), '3AM - 6AM':('3:00:01', '6:00:00'),
+    '6AM - 9AM':('6:00:01', '9:00:00'), '9AM - 12PM':('9:00:01', '12:00:00'),
+     '12PM - 3PM':('12:00:01', '15:00:00'), '3PM - 6PM':('15:00:01', '18:00:00'),
+      '6PM - 9PM':('18:00:01', '21:00:00'), '9PM - 12AM':('21:00:01', '23:59:59')}
+
+
+    for bucket in time_buckets:
+    
+        start_time = datetime.datetime.strptime(time_buckets[bucket][0], FMT)
+        end_time = datetime.datetime.strptime(time_buckets[bucket][1], FMT)
+    
+        tweets_contain = time_crunch(start_time, end_time)
+    
+        time_buckets[bucket] = time_buckets[bucket] + (len(tweets_contain),)
+
+#    print('Time bucket %s : %s' % ((sorted(time_buckets, key=lambda x: datetime.datetime.strptime(time_buckets[x][0], FMT))), ([time_buckets[i][2] for i in sorted(time_buckets, key=lambda x: datetime.datetime.strptime(time_buckets[x][0], FMT))])))
+
+
+    for bucket in sorted(time_buckets, key=lambda x: datetime.datetime.strptime(time_buckets[x][0], FMT)):
+        print('Time bucket %s \t: %d' % (bucket, time_buckets[bucket][2]))
         
+     #Create a bar graph to display the data
+    
+    word_pos = np.arange(len(time_buckets)) # this sets up the x-axis spacing
+
+    #print(word_pos)  - for debugging
+
+    tb_plot = [time_buckets[i][2] for i in sorted(time_buckets, key=lambda x: datetime.datetime.strptime(time_buckets[x][0], FMT))]
+    tb_names = list(sorted(time_buckets.keys(), key=lambda x: datetime.datetime.strptime(time_buckets[x][0], FMT)))
+    
+    plt.bar(word_pos, tb_plot, align='center', color='blue', alpha=0.2) # alpha determines the shading of the bars ("transparency")
+#    plt.bar(word_pos, [time_buckets[i][2] for i in sorted(time_buckets, key=lambda x: datetime.datetime.strptime(time_buckets[x][0], FMT))], align='center', alpha=0.7) # alpha determines the shading of the bars ("transparency")
+    # The generates a bar for the counts centered according to the spacing determined for the x axis    
+
+    plt.xticks(word_pos, tb_names) # This labels the x-axis -- positioning each word bolow the center of its respective bar
+    plt.ylabel('Number of Tweets Sent') # this labels the y axis
+    
+    plt.title('Frequency of Tweets by Time')
+#    plt.locator_params(axis='y', nbins=3) 
+    plt.show()
+           
 
 def basic_info():
     print('This program was written as a final project for CSC110 class in Summer of 2017.')
