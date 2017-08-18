@@ -11,7 +11,7 @@ from contextlib import redirect_stdout #Making file output easier - hopefully
 import matplotlib.pyplot as plt; plt.rcdefaults()
 import numpy as np #graphing
 import matplotlib.pyplot as plt #graphing
-from time import sleep
+#from time import sleep
 
 FMT = '%H:%M:%S'  #Set the time format globally
 
@@ -382,16 +382,16 @@ def word_stats(tweets_contain, inp_word, saving): #Called from the word search f
     stats = overall_stats('rt') #pulls data from overall_stats function by passing variable that indicated it would like something back.
     
     if ((rt_total/len(tweets_contain))-(stats[1]/tweetid) > 0):
-        print('\nTweets containing this word recieved %d more retweets than the average Trump tweet' % ((rt_total/len(tweets_contain))-(int(stats[1])/tweetid)))
+        print('\nTweets containing this word received %d more retweets than the average Trump tweet' % ((rt_total/len(tweets_contain))-(int(stats[1])/tweetid)))
         
     elif ((rt_total/len(tweets_contain))-(stats[1]/tweetid) < 0):
-        print('\nTweets containing this word recieved %d fewer retweets than the average Trump tweet' % (((rt_total/len(tweets_contain))-(int(stats[1])/tweetid))/-1))
+        print('\nTweets containing this word received %d fewer retweets than the average Trump tweet' % (((rt_total/len(tweets_contain))-(int(stats[1])/tweetid))/-1))
         
     if ((fav_total/len(tweets_contain))-(stats[0]/tweetid) > 0):
-        print('Tweets containing this word recieved %d more favorites than the average Trump tweet' % ((fav_total/len(tweets_contain))-(int(stats[0])/tweetid)))
+        print('Tweets containing this word received %d more favorites than the average Trump tweet' % ((fav_total/len(tweets_contain))-(int(stats[0])/tweetid)))
         
     elif ((fav_total/len(tweets_contain))-(stats[0]/tweetid) < 0):
-        print('Tweets containing this word recieved %d fewer favorites than the average Trump tweet' % (((fav_total/len(tweets_contain))-(int(stats[0])/tweetid))/-1))
+        print('Tweets containing this word received %d fewer favorites than the average Trump tweet' % (((fav_total/len(tweets_contain))-(int(stats[0])/tweetid))/-1))
     
     if saving == True:
         return
@@ -446,16 +446,16 @@ def time_stats(tweets_contain, inp_time_bucket, saving): #Called from the time f
     stats = overall_stats('rt') #pulls data from overall_stats function by passing variable that indicated it would like something back.
     
     if ((rt_total/len(tweets_contain))-(stats[1]/tweetid) > 0):
-        print('\nTweets sent in between %s recieved %d more retweets than the average Trump tweet' % ((inp_time_bucket, (rt_total/len(tweets_contain))-(int(stats[1])/tweetid))))
+        print('\nTweets sent in between %s received %d more retweets than the average Trump tweet' % ((inp_time_bucket, (rt_total/len(tweets_contain))-(int(stats[1])/tweetid))))
         
     elif ((rt_total/len(tweets_contain))-(stats[1]/tweetid) < 0):
-        print('\nTweets sent in between %s recieved %d fewer retweets than the average Trump tweet' % ((inp_time_bucket, ((rt_total/len(tweets_contain))-(int(stats[1])/tweetid))/-1)))
+        print('\nTweets sent in between %s received %d fewer retweets than the average Trump tweet' % ((inp_time_bucket, ((rt_total/len(tweets_contain))-(int(stats[1])/tweetid))/-1)))
         
     if ((fav_total/len(tweets_contain))-(stats[0]/tweetid) > 0):
-        print('Tweets sent in between %s recieved %d more favorites than the average Trump tweet' % ((inp_time_bucket, (fav_total/len(tweets_contain))-(int(stats[0])/tweetid))))
+        print('Tweets sent in between %s received %d more favorites than the average Trump tweet' % ((inp_time_bucket, (fav_total/len(tweets_contain))-(int(stats[0])/tweetid))))
         
     elif ((fav_total/len(tweets_contain))-(stats[0]/tweetid) < 0):
-        print('Tweets sent in between %s recieved %d fewer favorites than the average Trump tweet' % ((inp_time_bucket, ((fav_total/len(tweets_contain))-(int(stats[0])/tweetid))/-1)))
+        print('Tweets sent in between %s received %d fewer favorites than the average Trump tweet' % ((inp_time_bucket, ((fav_total/len(tweets_contain))-(int(stats[0])/tweetid))/-1)))
     
     if saving == True:
         return
